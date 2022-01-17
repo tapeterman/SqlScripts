@@ -1,0 +1,1 @@
+Neste repositorio estará varios arquivos com fuções e scripts do SQL Server que podem te ajudar no futuro!
