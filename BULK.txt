@@ -1,0 +1,105 @@
+USE [PNC]
+GO
+/****** Object:  StoredProcedure [dbo].[sp_bulk_table]    Script Date: 26/11/2021 15:03:26 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+        
+        
+ALTER procedure [dbo].[sp_bulk_table]          
+ @file as  varchar(max),                  
+ @table as varchar(max),                  
+ @delimitador as varchar(max),                
+ @qualificador as varchar(max)            
+as begin                  
+-----------------------------------------------------------------------------------------------------------------------------                  
+set nocount on                  
+                  
+if isnull(@file,'') = '' print 'Informe um nome de arquivo valido!'                  
+else if isnull(@table,'') = '' print 'Informe um nome para a tabela temporária!'                  
+else if left(@table,1) = '#' and left(@table,2) <> '##' print 'Não é possivel utilizar este recursos com tabelas temporárias comuns. Utilize ## como prefixo do nome da tabela. Ex.: ##table '            
+else if isnull(@delimitador,'') = '' print 'Informe o delimitador da base no arquivo de texto!'                  
+else begin                  
+                  
+                  
+if left(@table,2) = '##' set @table = right(@table,LEN(@table)-2)      
+                  
+--//Declaracao das variaveis                  
+declare @sql as varchar(max)                   
+declare @colunas as table (colunas varchar(max))                  
+declare @d as varchar(1)                  
+declare @tentativas as int = 1    
+                  
+--//Carrega os titulos das colunas                  
+set @d = case when @delimitador in ('	', '/t', '\t') then CHAR(9) else @delimitador end        
+    
+while @tentativas <= 5 begin             
+begin try drop table #tempTable end try begin catch end catch create table #tempTable (colunas varchar(max));                  
+select @sql = 'begin try ';                  
+select @sql = @sql + 'bulk insert #tempTable from ''' + @file + ''' with (fieldterminator = '''+@delimitador+''', codepage=''ACP'', datafiletype=''char'', '    
+select @sql = @sql + 'firstrow = ' + CONVERT(varchar, @tentativas) + ', lastrow = ' + CONVERT(varchar, @tentativas) +') ';                  
+select @sql = @sql + ' end try begin catch print error_message() end catch;'                  
+--print @sql    
+execute(@sql)     
+    
+if (select COUNT(*) from #tempTable where colunas is not null and colunas <> '' and LEN(colunas) > 1)>0 set @tentativas = 6        
+    
+set @tentativas = @tentativas+1    
+end    
+    
+    
+             
+update #tempTable set colunas = replace(replace(REPLACE(colunas,@d,';'),'
+',''),'n++','');
+          
+                  
+--//Realiza os ajustes necessarios nos titulos                  
+set @d = ';';                  
+with split(colunas, j, k) as (                  
+select colunas, j=convert(int,1), k=convert(int,CHARINDEX(@d,colunas+@d,1))  from #tempTable                  
+union all                  
+select colunas, j=k+1, k=convert(int,CHARINDEX(@d,colunas+@d,k+1)) from split                  
+where convert(int,CHARINDEX(@d,colunas+@d,k+1)) <> 0                  
+)                   
+insert into @colunas select SUBSTRING(colunas, j, convert(int,k-j)) as colunas from split option(maxrecursion 0);              
+update @colunas set colunas = LTRIM(RTRIM(colunas));
+
+--update @colunas set colunas = left(right(colunas ,LEN(colunas)-1),LEN(colunas)-2)
+--where colunas like '\'+@qualificador+'%\'+@qualificador+'' escape '\';
+
+update @colunas set colunas = replace(colunas, @qualificador, '')
+
+update @colunas set colunas = '['+colunas+']';
+              
+begin try drop table #tempTable end try                  
+begin catch end catch                  
+                  
+--//Cria e carrega a tabela final                  
+select @sql = 'begin try ';                  
+select @sql = @sql + ' drop table ##'+@table ;                  
+select @sql = @sql + ' end try begin catch end catch';                  
+exec(@sql)                  
+              
+select @sql = 'begin try ';                  
+select @sql = @sql + ' create table ##'+@table+' ('+(select stuff((select ','+colunas+' varchar(max)' from @colunas for xml path('')),1,1,''))+')';                  
+select @sql = @sql + ' bulk insert ##'+@table+' from ''' + @file + ''' with (codepage=''acp'', datafiletype=''char'', firstrow=2, fieldterminator='''+@delimitador+''')';                  
+select @sql = @sql + ' end try begin catch print error_message() end catch'                  
+exec (@sql)              
+            
+if OBJECT_ID('tempdb.dbo.#upQualificador') is not null drop table #upQualificador            
+select ROW_NUMBER() over (order by colunas) idx, * into #upQualificador from @colunas             
+            
+declare @i int = 1;            
+while @i<=(select MAX(idx) from #upQualificador) begin            
+ select @sql = 'update ##'+@table+' set ' + colunas + '=LTRIM(RTRIM(' + colunas + '));' from #upQualificador where idx=@i            
+ select @sql = @sql + 'update ##'+@table+' set ' + colunas + '=left(right('+ colunas +',LEN('+ colunas +')-1),LEN('+ colunas +')-2)             
+     where ' + colunas + ' like ''\'+@qualificador+'%\'+@qualificador+''' escape ''\'';' from #upQualificador where idx=@i            
+ exec(@sql)               
+ set @i = @i+1;            
+end            
+            
+end    
+    
+end

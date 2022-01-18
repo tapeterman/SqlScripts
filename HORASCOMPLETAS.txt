@@ -1,0 +1,39 @@
+USE [PNC]
+GO
+/****** Object:  UserDefinedFunction [dbo].[horas_Completas]    Script Date: 26/11/2021 15:08:35 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER function [dbo].[horas_Completas]
+(
+    @Segundos BIGINT
+)
+returns VARCHAR(28)
+as
+begin    
+
+DECLARE  
+@Minutos BIGINT,   
+@Horas BIGINT,  
+@FormatarTempo VARCHAR(50)  
+   
+	SELECT    
+	@Minutos = @Segundos/60,   
+	@Horas = @Segundos/3600  
+  
+	SELECT    
+	@Segundos = @Segundos - ((@Segundos/60) * 60),   
+	@Minutos = @Minutos - ((@Minutos/60) * 60) -- Minutos  
+  
+	SELECT    
+	@FormatarTempo =     
+	CAST(@Horas AS VARCHAR(30)) + ':' + CASE WHEN @Minutos < 10 THEN '0' ELSE '' END +   
+	CAST(@Minutos AS VARCHAR(30)) + ':' + CASE WHEN @Segundos < 10 THEN '0' ELSE '' END +   
+	CAST(@Segundos AS VARCHAR(30))   
+	return @FormatarTempo
+
+end
+
+
+

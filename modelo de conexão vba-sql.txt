@@ -1,0 +1,304 @@
+Private conn As Object
+Private connStr As String
+Private tipoConn As TipoConexao
+Private vServer As String
+Private vProvider As String
+Private vCaminho As String
+Private cmdTimeOut As Integer
+Private vSilent As Boolean
+Private vBase As String
+Private vUser As String
+Private vPassword As String
+Private vTrusted As Boolean
+
+Private Const DEFAULT_PROVIDER As String = "Provider=SQLOLEDB.1;"
+
+Enum TipoConexao
+    cnnExcel = 1
+    cnnAccess = 2
+    cnnSqlServer = 3
+    cnnText = 4
+End Enum
+Private Sub Class_Initialize()
+
+Set conn = CreateObject("ADODB.Connection")
+
+End Sub
+
+Private Sub Class_Terminate()
+
+Set conn = Nothing
+
+End Sub
+
+Property Get ConnectionString() As String
+
+If Tipo = cnnExcel Then
+
+    If Application.Version Like "*11*" Then
+        connStr = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" & Caminho & ";Extended Properties=""Excel 8.0;HDR=Yes;IMEX=1"";"
+    Else
+        connStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & Caminho & ";Extended Properties=""Excel 8.0;HDR=YES"";"
+    End If
+
+ElseIf Tipo = cnnSqlServer Then
+
+    If connStr = "" Then
+        If Trusted Then
+            connStr = DEFAULT_PROVIDER & ";SERVER=" & Me.Server & "; DATABASE=" & Me.base & "; Trusted_Connection=Yes;"
+        Else
+            connStr = DEFAULT_PROVIDER & ";SERVER=" & Me.Server & "; DATABASE=" & Me.base & "; UID=" & Me.User & "; PWD=" & Me.Password & ";"
+        End If
+    End If
+
+ElseIf Tipo = cnnAccess Then
+
+    If Application.Version Like "*11*" Then
+        connStr = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" & Caminho & ";"
+    Else
+        connStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & Caminho & ";"
+    End If
+
+ElseIf Tipo = cnnText Then
+
+    connStr = "Provider=Microsoft.Jet.OLEDB.4.0;" _
+                & "Data Source='" & Me.Caminho & "';" _
+                & "Extended Properties='text;" _
+                & "HDR=YES;" _
+                & "FMT=Delimited'"
+
+End If
+
+ConnectionString = connStr
+
+End Property
+
+Property Let ConnectionString(ByVal valor As String)
+
+Dim I As Integer
+Dim x As Integer
+Dim txt As String
+
+If tipoConn = cnnSqlServer Then
+
+    I = InStr(1, LCase(valor), "provider=")
+    
+    If I > 0 Then
+    
+        x = InStr(I, LCase(valor), ";")
+        
+        txt = Mid(valor, I, (x - I) + 1)
+        
+        valor = Replace(valor, txt, DEFAULT_PROVIDER & ";")
+        
+        connStr = valor
+        
+    Else
+
+        connStr = DEFAULT_PROVIDER & ";" & valor
+
+    End If
+    
+Else
+    connStr = valor
+End If
+
+End Property
+
+Property Get Silent() As Boolean
+
+Silent = vSilent
+
+End Property
+
+Property Let Silent(ByVal value As Boolean)
+
+vSilent = value
+
+End Property
+
+Property Get CommandTimeOut() As Integer
+
+If cmdTimeOut = 0 Then
+    cmdTimeOut = 15
+End If
+
+CommandTimeOut = cmdTimeOut
+
+End Property
+
+Property Let CommandTimeOut(ByVal value As Integer)
+
+If value < 0 Then value = 0
+
+cmdTimeOut = value
+
+End Property
+
+Property Get Caminho() As String
+
+If vCaminho = "" Then
+    vCaminho = ThisWorkbook.FullName
+End If
+
+Caminho = vCaminho
+
+End Property
+
+Property Let Caminho(ByVal valor As String)
+
+vCaminho = Trim(LCase(valor))
+
+End Property
+
+Property Get Server() As String
+
+Server = vServer
+
+End Property
+
+Property Let Server(ByVal valor As String)
+
+vServer = valor
+
+End Property
+
+Property Get Provider() As String
+
+Provider = vProvider
+
+End Property
+
+Property Let Provider(ByVal valor As String)
+
+vProvider = valor
+
+End Property
+'
+Property Get base() As String
+
+base = vBase
+
+End Property
+'
+Property Let base(ByVal valor As String)
+
+vBase = valor
+
+End Property
+'
+Property Get User() As String
+
+User = vUser
+
+End Property
+
+Property Let User(ByVal valor As String)
+
+vUser = valor
+
+End Property
+'
+Property Get Password() As String
+
+Password = vPassword
+
+End Property
+
+Property Let Password(ByVal valor As String)
+
+vPassword = valor
+
+End Property
+'
+Property Get Trusted() As Boolean
+
+Trusted = vTrusted
+
+End Property
+
+Property Let Trusted(ByVal valor As Boolean)
+
+vTrusted = valor
+
+End Property
+'
+Property Get Tipo() As TipoConexao
+
+Tipo = tipoConn
+
+End Property
+
+Property Let Tipo(ByVal valor As TipoConexao)
+
+tipoConn = valor
+
+End Property
+
+Property Get Connection() As Object
+
+Select Case tipoConn
+
+End Select
+
+Connection = conn
+
+End Property
+
+Function Abrir() As Boolean
+
+If Not conn Is Nothing Then
+
+    conn.Open ConnectionString
+    
+End If
+
+End Function
+Function Fechar() As Boolean
+
+conn.Close
+
+Set conn = Nothing
+
+End Function
+Function ExecuteNonQuery(ByVal sql As String) As Boolean
+
+conn.CommandTimeOut = CommandTimeOut
+conn.Execute (sql)
+
+ExecuteNonQuery = True
+
+'MsgBox "Você executou uma consulta que não retorna dados."
+
+End Function
+
+Function ExecuteReader(ByVal sql As String) As Object
+
+Dim datafim As Date
+
+conn.CommandTimeOut = CommandTimeOut
+
+datafim = DateAdd("s", CommandTimeOut, Now)
+
+On Error Resume Next
+
+Do
+
+    Set ExecuteReader = conn.Execute(sql)
+
+    If Err.number = -2147467259 Then
+        Application.Wait Now + TimeValue("00:00:01")
+    Else
+        Exit Do
+    End If
+
+Loop While (DateDiff("s", Now, datafim) >= 0)
+
+If Err.number <> 0 And Not Silent Then
+
+    MsgBox Err.Source & vbNewLine & vbNewLine & Err.Description
+    
+End If
+
+End Function
+

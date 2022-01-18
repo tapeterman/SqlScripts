@@ -1,0 +1,34 @@
+USE [PNC]
+GO
+/****** Object:  UserDefinedFunction [dbo].[fncSplit]    Script Date: 26/11/2021 15:06:36 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER FUNCTION [dbo].[fncSplit] ( @String varchar(MAX), @Separador varchar(20), @PosBusca int )
+RETURNS varchar(MAX)
+AS BEGIN
+    
+    DECLARE @Index int, @Max int, @Retorno varchar(MAX)
+ 
+    DECLARE @Partes as TABLE ( Id_Parte int identity(1,1), Texto varchar(MAX) )
+ 
+    SET @Index = charIndex(@Separador,@String)
+ 
+    WHILE (@Index > 0) BEGIN    
+        INSERT INTO @Partes SELECT SubString(@String,1,@Index-1)
+        SET @String = Rtrim(Ltrim(SubString(@String,@Index+Len(@Separador),Len(@String))))
+        SET @Index = charIndex(@Separador,@String)
+    END
+ 
+    IF (@String != '') INSERT INTO @Partes SELECT @String
+ 
+    SELECT @Max = Count(*) FROM @Partes
+ 
+    IF (@PosBusca = 0) SET @Retorno = Cast(@Max as varchar(5))
+    IF (@PosBusca < 0) SET @PosBusca = @Max + 1 + @PosBusca
+    IF (@PosBusca > 0) SELECT @Retorno = Texto FROM @Partes WHERE Id_Parte = @PosBusca
+ 
+    RETURN RTRIM(LTRIM(@Retorno))
+ 
+END

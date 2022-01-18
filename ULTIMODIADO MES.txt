@@ -1,0 +1,22 @@
+USE [PNC]
+GO
+/****** Object:  UserDefinedFunction [dbo].[UltimoDiaMes]    Script Date: 26/11/2021 15:07:30 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER Function [dbo].[UltimoDiaMes](@Date DateTime)
+
+Returns DateTime
+
+AS
+
+Begin
+	
+	Set @Date = DateAdd(Month,1,@Date)
+
+	Set @Date = Cast(Cast(Month(@Date)As varchar(2))+'-1-'+Cast(Year(@Date)As varchar(4)) As DateTime)
+
+	Return DateAdd(Day,-1,@Date)
+End

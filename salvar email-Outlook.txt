@@ -1,0 +1,25 @@
+Public Sub ProcessarAnexo2(Email As Outlook.MailItem)
+    Dim DiretorioAnexos As String
+    
+    DiretorioAnexos = "\\se0001et0650\ETL\extracao"
+    
+    Dim MailID As String
+    Dim Mail As Outlook.MailItem
+    
+    MailID = Email.EntryID
+    Set Mail = Application.Session.GetItemFromID(MailID)
+
+    For Each Anexo In Mail.Attachments
+        If Right(Anexo.FileName, 4) = "xlsb" Or _
+           Right(Anexo.FileName, 4) = ".xls" Or _
+           Right(Anexo.FileName, 4) = "xlsm" Or _
+           Right(Anexo.FileName, 4) = "XLSX" Or _
+           Right(Anexo.FileName, 4) = "xlsx" Then
+            
+                Anexo.SaveAsFile DiretorioAnexos & "\" & Anexo.FileName
+            
+        End If
+    Next
+    
+  
+End Sub

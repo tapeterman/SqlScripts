@@ -1,0 +1,50 @@
+USE [PNC]
+GO
+/****** Object:  UserDefinedFunction [dbo].[DigitosVerificadoresCnpj]    Script Date: 26/11/2021 15:09:09 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER FUNCTION [dbo].[DigitosVerificadoresCnpj] (@CNPJ varchar(50))
+RETURNS varchar(50)
+AS BEGIN
+    
+    DECLARE @D1 INT
+			,@D2 INT
+			,@D3 INT
+			,@D4 INT
+			,@D5 INT
+			,@D6 INT
+			,@D7 INT
+			,@D8 INT
+			,@D9 INT
+			,@D10 INT
+			,@D11 INT
+			,@D12 INT
+			,@D13 INT
+			,@D14 INT
+	SET @D1 = CONVERT(INT, SubString(@CNPJ,1,1))
+	SET @D2 = CONVERT(INT, SubString(@CNPJ,2,1))
+	SET @D3 = CONVERT(INT, SubString(@CNPJ,3,1))
+	SET @D4 = CONVERT(INT, SubString(@CNPJ,4,1))
+	SET @D5 = CONVERT(INT, SubString(@CNPJ,5,1))
+	SET @D6 = CONVERT(INT, SubString(@CNPJ,6,1))
+	SET @D7 = CONVERT(INT, SubString(@CNPJ,7,1))
+	SET @D8 = CONVERT(INT, SubString(@CNPJ,8,1))
+	SET @D9 = CONVERT(INT, SubString(@CNPJ,9,1))
+	SET @D10 = CONVERT(INT, SubString(@CNPJ,10,1))
+	SET @D11 = CONVERT(INT, SubString(@CNPJ,11,1))
+	SET @D12 = CONVERT(INT, SubString(@CNPJ,12,1))
+
+	SET @D13 = (@D1 * 6) + (@D2 * 7) + (@D3 * 8) + (@D4 * 9) + (@D5 * 2) 
+				+ (@D6 * 3) + (@D7 * 4) + (@D8 * 5) + (@D9 * 6) + (@D10 * 7) + (@D11 * 8) + (@D12 * 9)
+	SET @D13 = CASE WHEN @D13 % 11 = 10 THEN 0 ELSE @D13 % 11 END
+
+	SET @D14 = (@D1 * 5) + (@D2 * 6) + (@D3 * 7) + (@D4 * 8) + (@D5 * 9) + (@D6 * 2) + (@D7 * 3) + (@D8 * 4) + (@D9 * 5) 
+				+ (@D10 * 6) + (@D11 * 7) + (@D12 * 8) + (@D13 * 9)
+				
+	SET @D14 = CASE WHEN @D14 % 11 = 10 THEN 0 ELSE @D14 % 11 END     --'Obtem o resto
+    
+    RETURN @CNPJ + CONVERT(VARCHAR,@D13) + CONVERT(VARCHAR,@D14)
+ 
+END

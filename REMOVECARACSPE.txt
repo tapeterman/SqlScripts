@@ -1,0 +1,30 @@
+USE [PNC]
+GO
+/****** Object:  UserDefinedFunction [dbo].[fnRemoverAcentosCaracEspeciais]    Script Date: 26/11/2021 15:07:52 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER FUNCTION [dbo].[fnRemoverAcentosCaracEspeciais]
+(
+	@TEXTO VARCHAR(MAX)
+)
+RETURNS VARCHAR(MAX)
+AS
+BEGIN
+
+	DECLARE @TEXTO_FORMATADO VARCHAR(MAX)
+
+	-- O trecho abaixo possibilita que caracteres como "º" ou "ª"
+	-- sejam convertidos para "o" ou "a", respectivamente
+	SET @TEXTO_FORMATADO = UPPER(@TEXTO)
+	    COLLATE sql_latin1_general_cp1250_ci_as
+
+	-- O trecho abaixo remove acentos e outros caracteres especiais,
+	-- substituindo os mesmos por letras normais
+	SET @TEXTO_FORMATADO = @TEXTO_FORMATADO
+	    COLLATE sql_latin1_general_cp1251_ci_as
+
+	RETURN @TEXTO_FORMATADO
+
+END
