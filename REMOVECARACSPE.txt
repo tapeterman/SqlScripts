@@ -1,6 +1,3 @@
-USE [PNC]
-GO
-/****** Object:  UserDefinedFunction [dbo].[fnRemoverAcentosCaracEspeciais]    Script Date: 26/11/2021 15:07:52 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -15,7 +12,7 @@ BEGIN
 
 	DECLARE @TEXTO_FORMATADO VARCHAR(MAX)
 
-	-- O trecho abaixo possibilita que caracteres como "º" ou "ª"
+	-- O trecho abaixo possibilita que caracteres como "ï¿½" ou "ï¿½"
 	-- sejam convertidos para "o" ou "a", respectivamente
 	SET @TEXTO_FORMATADO = UPPER(@TEXTO)
 	    COLLATE sql_latin1_general_cp1250_ci_as

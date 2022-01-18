@@ -1,5 +1,3 @@
-USE [PNC]
-GO
 /****** Object:  UserDefinedFunction [dbo].[UltimoDiaMes]    Script Date: 26/11/2021 15:07:30 ******/
 SET ANSI_NULLS ON
 GO

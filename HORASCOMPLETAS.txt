@@ -1,6 +1,3 @@
-USE [PNC]
-GO
-/****** Object:  UserDefinedFunction [dbo].[horas_Completas]    Script Date: 26/11/2021 15:08:35 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON

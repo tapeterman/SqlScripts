@@ -1,12 +1,7 @@
-USE [PNC]
-GO
-/****** Object:  StoredProcedure [dbo].[sp_bulk_table]    Script Date: 26/11/2021 15:03:26 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
-        
         
 ALTER procedure [dbo].[sp_bulk_table]          
  @file as  varchar(max),                  
@@ -18,8 +13,8 @@ as begin
 set nocount on                  
                   
 if isnull(@file,'') = '' print 'Informe um nome de arquivo valido!'                  
-else if isnull(@table,'') = '' print 'Informe um nome para a tabela temporária!'                  
-else if left(@table,1) = '#' and left(@table,2) <> '##' print 'Não é possivel utilizar este recursos com tabelas temporárias comuns. Utilize ## como prefixo do nome da tabela. Ex.: ##table '            
+else if isnull(@table,'') = '' print 'Informe um nome para a tabela temporï¿½ria!'                  
+else if left(@table,1) = '#' and left(@table,2) <> '##' print 'Nï¿½o ï¿½ possivel utilizar este recursos com tabelas temporï¿½rias comuns. Utilize ## como prefixo do nome da tabela. Ex.: ##table '            
 else if isnull(@delimitador,'') = '' print 'Informe o delimitador da base no arquivo de texto!'                  
 else begin                  
                   

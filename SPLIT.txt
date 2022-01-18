@@ -1,6 +1,3 @@
-USE [PNC]
-GO
-/****** Object:  UserDefinedFunction [dbo].[fncSplit]    Script Date: 26/11/2021 15:06:36 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON

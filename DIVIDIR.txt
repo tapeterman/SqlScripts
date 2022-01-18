@@ -1,5 +1,4 @@
-USE [PNC]
-GO
+
 /****** Object:  UserDefinedFunction [dbo].[fn_Dividir]    Script Date: 26/11/2021 15:05:16 ******/
 SET ANSI_NULLS ON
 GO
